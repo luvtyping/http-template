@@ -18,20 +18,24 @@ public class PokemonFetchingServiceImpl implements PokemonFetchingService {
     public Pokemon fetchByName(String name) {
         String query = "https://pokeapi.co/api/v2/pokemon/" + name;
         HttpURLConnection connection = getHttpURLConnection(query);
-        String json = getJson(connection);
         ObjectMapper mapper = new ObjectMapperFactoryImpl().getObjectMapper();
-        return getPokemonWithJsonProperties(mapper, new Pokemon(), json);
+        Pokemon pokemon = new Pokemon();
+        try {
+            pokemon = mapper.readValue(getJson(connection), Pokemon.class);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+        return pokemon;
     }
 
     @Override
     public byte[] getPokemonImage(String name) throws IllegalArgumentException {
         String query = "https://pokeapi.co/api/v2/pokemon/" + name;
         HttpURLConnection connection = getHttpURLConnection(query);
-        String json = getJson(connection);
         ObjectMapper mapper = new ObjectMapperFactoryImpl().getObjectMapper();
         byte[] bytes = new byte[0];
         try {
-            JsonNode jsonNode = mapper.readTree(json);
+            JsonNode jsonNode = mapper.readTree(getJson(connection));
             bytes = jsonNode.get("sprites").get("front_default").asText().getBytes();
         } catch (IOException e) {
             e.printStackTrace();
@@ -66,28 +70,5 @@ public class PokemonFetchingServiceImpl implements PokemonFetchingService {
             e.printStackTrace();
         }
         return json;
-    }
-
-    private Pokemon getPokemonWithJsonProperties(ObjectMapper mapper, Pokemon pokemon, String json) {
-        try {
-            pokemon = mapper.readValue(json, Pokemon.class);
-            JsonNode statsNode = mapper.readTree(json).get("stats");
-            for (JsonNode jsonNode : statsNode) {
-                switch (jsonNode.get("stat").get("name").asText()) {
-                    case "hp":
-                        pokemon.setHp(jsonNode.get("base_stat").shortValue());
-                        break;
-                    case "attack":
-                        pokemon.setAttack(jsonNode.get("base_stat").shortValue());
-                        break;
-                    case "defense":
-                        pokemon.setDefense(jsonNode.get("base_stat").shortValue());
-                        break;
-                }
-            }
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
-        return pokemon;
     }
 }

@@ -1,13 +1,16 @@
 package com.epam.izh.rd.online.entity;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * Покемон. Поля должны заполняться из JSON, который возвратит внешний REST-service
  * Для маппинга значений из массива stats рекомендуется использовать отдельный класс Stat и аннотацию @JsonCreator
  */
 @Data
+@NoArgsConstructor
 public class Pokemon {
 
     /**
@@ -37,4 +40,10 @@ public class Pokemon {
      */
     private short defense;
 
+    @JsonCreator
+    public Pokemon(@JsonProperty("stats") Stat[] stats) {
+        this.hp = stats[0].getStat();
+        this.attack = stats[1].getStat();
+        this.defense = stats[2].getStat();
+    }
 }
